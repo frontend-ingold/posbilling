@@ -6,7 +6,35 @@ import { productRouter } from "./routes/productRoutes.js";
 
 export const app = express();
 
-app.use(cors());
+const defaultAllowedOrigins = [
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+  "https://posbilling-one.vercel.app"
+];
+
+const allowedOrigins = (
+  process.env.ALLOWED_ORIGINS ||
+  process.env.CORS_ORIGIN ||
+  defaultAllowedOrigins.join(",")
+)
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error(`CORS blocked for origin: ${origin}`));
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+  })
+);
 app.use(morgan("dev"));
 app.use(express.json());
 
